@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>APF Group Lesson Schedule — May 11–17, 2026</title>
+<title>APF Group Lesson Schedule — May 4–10, 2026</title>
 <style>
   :root {
     --pink: #e91e63;
@@ -314,10 +314,14 @@
 <body>
 <header class="page">
   <h1>APF Group Lesson Schedule</h1>
-  <div class="sub">Week of <b>May 11 – May 17, 2026</b> · Filter by coach and level. Hover a session for details.</div>
+  <div class="sub" id="subText">Filter by coach and level. Hover a session for details.</div>
 </header>
 
 <div class="filters">
+  <div class="filter-group">
+    <label for="weekFilter">Week</label>
+    <select id="weekFilter"></select>
+  </div>
   <div class="filter-group">
     <label for="coachFilter">Coach</label>
     <select id="coachFilter">
@@ -349,95 +353,178 @@
 <div class="meta">
   <b>Notes:</b> C1 / C2 = Court 1 / Court 2 (used for layout, not filtering).
   Sessions with a red ★ may not run if the assigned coach changes or two coaches are on court.
-  Schedule does not include Wednesday 5/13.
+  <span id="metaWedNote"></span>
   Capacity per court: Adult 8, Kids 5–7 6, Junior 10, Jr. Players 6. Events vary.
 </div>
 
 <script>
   // -------- Data --------
-  // Each session: day (1=Mon), start, end (24h), level (cleaned, no court), coach, court, category, star?
-  const days = [
-    { key:"mon", label:"Mon", date:"5/11", weekend:false },
-    { key:"tue", label:"Tue", date:"5/12", weekend:false },
-    { key:"thu", label:"Thu", date:"5/14", weekend:false },
-    { key:"fri", label:"Fri", date:"5/15", weekend:false },
-    { key:"sat", label:"Sat", date:"5/16", weekend:"sat" },
-    { key:"sun", label:"Sun", date:"5/17", weekend:"sun" },
+  // weeks: list of weekly schedules. Each week has its own days[] and sessions[].
+  // To add a new week, append another entry following the same shape.
+  const weeks = [
+    {
+      id: "20260504",
+      label: "May 4–10, 2026",
+      sub:   "Week of May 4 – May 10, 2026",
+      noWedNote: "Schedule does not include Wednesday 5/6.",
+      days: [
+        { key:"mon", label:"Mon", date:"5/4",  weekend:false },
+        { key:"tue", label:"Tue", date:"5/5",  weekend:false },
+        { key:"thu", label:"Thu", date:"5/7",  weekend:false },
+        { key:"fri", label:"Fri", date:"5/8",  weekend:false },
+        { key:"sat", label:"Sat", date:"5/9",  weekend:"sat" },
+        { key:"sun", label:"Sun", date:"5/10", weekend:"sun" },
+      ],
+      sessions: [
+        // Mon 5/4
+        { day:"mon", start:"09:00", end:"10:30", level:"IM/AD",   coach:"Sakai", court:"C1", cat:"pink"   },
+        { day:"mon", start:"10:30", end:"12:00", level:"FL/BG",   coach:"Hotta", court:"C1", cat:"pink"   },
+        { day:"mon", start:"16:00", end:"17:00", level:"Kids",    coach:"Otsu",  court:"C1", cat:"green"  },
+        { day:"mon", start:"17:00", end:"18:30", level:"JA",      coach:"Hotta", court:"C1", cat:"blue"   },
+        { day:"mon", start:"17:00", end:"18:30", level:"PP",      coach:"Sakai", court:"C2", cat:"blue"   },
+        { day:"mon", start:"18:30", end:"20:30", level:"PL",      coach:"Otsu",  court:"C1/C2", cat:"purple" },
+
+        // Tue 5/5
+        { day:"tue", start:"09:00", end:"10:30", level:"FL/BG",   coach:"Sakai", court:"C1", cat:"pink"   },
+        { day:"tue", start:"10:30", end:"12:00", level:"IM/AD",   coach:"Sakai", court:"C1", cat:"pink"   },
+        { day:"tue", start:"10:30", end:"12:00", level:"ST",      coach:"Hotta", court:"C2", cat:"pink"   },
+        { day:"tue", start:"17:00", end:"18:30", level:"JA",      coach:"Hotta", court:"C1", cat:"blue"   },
+        { day:"tue", start:"17:00", end:"18:30", level:"PP",      coach:"Otsu",  court:"C2", cat:"blue"   },
+        { day:"tue", start:"18:30", end:"20:30", level:"PL",      coach:"Otsu",  court:"C1/C2", cat:"purple" },
+
+        // Thu 5/7
+        { day:"thu", start:"09:00", end:"10:30", level:"FL/BG",   coach:"Sakai", court:"C1", cat:"pink"   },
+        { day:"thu", start:"10:30", end:"12:00", level:"BG/IM",   coach:"Otsu",  court:"C1", cat:"pink"   },
+        { day:"thu", start:"16:00", end:"17:00", level:"Kids",    coach:"Hotta", court:"C1", cat:"green"  },
+        { day:"thu", start:"17:00", end:"18:30", level:"JA",      coach:"Otsu",  court:"C1", cat:"blue"   },
+        { day:"thu", start:"17:00", end:"18:30", level:"JF",      coach:"Sakai", court:"C2", cat:"blue"   },
+        { day:"thu", start:"18:30", end:"20:30", level:"PL",      coach:"Otsu/Hotta", court:"C1/C2", cat:"purple" },
+        { day:"thu", start:"20:30", end:"22:00", level:"IM/AD/TN",coach:"Hotta", court:"C1", cat:"pink"   },
+
+        // Fri 5/8
+        { day:"fri", start:"09:00", end:"10:30", level:"BG/IM",   coach:"Sakai", court:"C1", cat:"pink"   },
+        { day:"fri", start:"10:30", end:"12:00", level:"FL/BG",   coach:"Otsu",  court:"C1", cat:"pink"   },
+        { day:"fri", start:"10:30", end:"12:00", level:"ST",      coach:"Hotta", court:"C2", cat:"pink"   },
+        { day:"fri", start:"16:00", end:"17:00", level:"Kids",    coach:"Hotta", court:"C1", cat:"green"  },
+        { day:"fri", start:"17:00", end:"18:30", level:"JF",      coach:"Otsu",  court:"C1", cat:"blue"   },
+        { day:"fri", start:"17:00", end:"18:30", level:"PP",      coach:"Sakai", court:"C2", cat:"blue"   },
+        { day:"fri", start:"18:30", end:"20:30", level:"PL",      coach:"Otsu/Hotta", court:"C1/C2", cat:"purple" },
+
+        // Sat 5/9
+        { day:"sat", start:"09:00", end:"10:30", level:"AD/TN",   coach:"Sakai", court:"C1", cat:"pink"   },
+        { day:"sat", start:"09:00", end:"10:30", level:"JA",      coach:"Otsu",  court:"C2", cat:"blue"   },
+        { day:"sat", start:"10:30", end:"12:00", level:"IM/AD",   coach:"Hotta", court:"C1", cat:"pink"   },
+        { day:"sat", start:"10:30", end:"12:00", level:"FL/BG",   coach:"Sakai", court:"C2", cat:"pink"   },
+        { day:"sat", start:"13:30", end:"15:00", level:"BG/IM",   coach:"Sakai", court:"C1", cat:"pink"   },
+        { day:"sat", start:"13:30", end:"15:00", level:"JF",      coach:"Hotta", court:"C2", cat:"blue"   },
+        { day:"sat", start:"15:00", end:"16:30", level:"PP",      coach:"Hotta", court:"C1", cat:"blue"   },
+        { day:"sat", start:"15:00", end:"16:30", level:"JF",      coach:"Otsu",  court:"C2", cat:"blue"   },
+        { day:"sat", start:"16:30", end:"18:30", level:"PL",      coach:"Otsu",  court:"C1", cat:"purple" },
+        { day:"sat", start:"16:30", end:"18:00", level:"PP",      coach:"Sakai", court:"C2", cat:"orange", note:"Jr.High Performance" },
+
+        // Sun 5/10
+        { day:"sun", start:"09:00", end:"10:30", level:"JA",      coach:"Sakai", court:"C1", cat:"blue"   },
+        { day:"sun", start:"09:00", end:"10:30", level:"JF",      coach:"Hotta", court:"C2", cat:"blue"   },
+        { day:"sun", start:"10:30", end:"12:00", level:"IM/AD",   coach:"Sakai", court:"C1", cat:"pink"   },
+        { day:"sun", start:"10:30", end:"12:00", level:"PP",      coach:"Otsu",  court:"C2", cat:"blue"   },
+        { day:"sun", start:"13:30", end:"15:00", level:"ST",      coach:"Hotta", court:"C1", cat:"pink"   },
+        { day:"sun", start:"13:30", end:"15:00", level:"AD/TN",   coach:"Otsu",  court:"C2", cat:"pink"   },
+        { day:"sun", start:"15:00", end:"16:30", level:"JA/PP",   coach:"Otsu",  court:"C1", cat:"orange", note:"Jr.High Performance" },
+        { day:"sun", start:"15:00", end:"16:30", level:"BG/IM",   coach:"Sakai", court:"C2", cat:"pink"   },
+        { day:"sun", start:"16:30", end:"18:30", level:"PL",      coach:"Otsu/Hotta", court:"C1/C2", cat:"purple" },
+      ],
+    },
+    {
+      id: "20260511",
+      label: "May 11–17, 2026",
+      sub:   "Week of May 11 – May 17, 2026",
+      noWedNote: "Schedule does not include Wednesday 5/13.",
+      days: [
+        { key:"mon", label:"Mon", date:"5/11", weekend:false },
+        { key:"tue", label:"Tue", date:"5/12", weekend:false },
+        { key:"thu", label:"Thu", date:"5/14", weekend:false },
+        { key:"fri", label:"Fri", date:"5/15", weekend:false },
+        { key:"sat", label:"Sat", date:"5/16", weekend:"sat" },
+        { key:"sun", label:"Sun", date:"5/17", weekend:"sun" },
+      ],
+      sessions: [
+        // Mon 5/11
+        { day:"mon", start:"09:00", end:"10:30", level:"IM/AD",   coach:"Sakai", court:"C1", cat:"pink"   },
+        { day:"mon", start:"09:00", end:"10:30", level:"BG/IM",   coach:"Hotta", court:"C2", cat:"pink", star:true },
+        { day:"mon", start:"10:30", end:"12:00", level:"FL/BG",   coach:"Hotta", court:"C1", cat:"pink"   },
+        { day:"mon", start:"16:00", end:"17:00", level:"Kids",    coach:"Otsu",  court:"C1", cat:"green"  },
+        { day:"mon", start:"17:00", end:"18:30", level:"JA",      coach:"Hotta", court:"C1", cat:"blue"   },
+        { day:"mon", start:"17:00", end:"18:30", level:"PP",      coach:"Sakai", court:"C2", cat:"blue"   },
+        { day:"mon", start:"18:30", end:"20:30", level:"PL",      coach:"Otsu",  court:"C1/C2", cat:"purple" },
+
+        // Tue 5/12
+        { day:"tue", start:"09:00", end:"10:30", level:"FL/BG",   coach:"Sakai", court:"C1", cat:"pink"   },
+        { day:"tue", start:"10:30", end:"12:00", level:"IM/AD",   coach:"Sakai", court:"C1", cat:"pink"   },
+        { day:"tue", start:"10:30", end:"12:00", level:"ST",      coach:"Hotta", court:"C2", cat:"pink"   },
+        { day:"tue", start:"17:00", end:"18:30", level:"JA",      coach:"Hotta", court:"C1", cat:"blue"   },
+        { day:"tue", start:"17:00", end:"18:30", level:"PP",      coach:"Otsu",  court:"C2", cat:"blue"   },
+        { day:"tue", start:"18:30", end:"20:30", level:"PL",      coach:"Otsu",  court:"C1/C2", cat:"purple" },
+
+        // Thu 5/14
+        { day:"thu", start:"09:00", end:"10:30", level:"FL/BG",   coach:"Sakai", court:"C1", cat:"pink"   },
+        { day:"thu", start:"10:30", end:"12:00", level:"BG/IM",   coach:"Otsu",  court:"C1", cat:"pink"   },
+        { day:"thu", start:"16:00", end:"17:00", level:"Kids",    coach:"Hotta", court:"C1", cat:"green"  },
+        { day:"thu", start:"17:00", end:"18:30", level:"JA",      coach:"Otsu",  court:"C1", cat:"blue"   },
+        { day:"thu", start:"17:00", end:"18:30", level:"JF",      coach:"Sakai", court:"C2", cat:"blue"   },
+        { day:"thu", start:"18:30", end:"20:30", level:"PL",      coach:"Otsu",  court:"C1/C2", cat:"purple" },
+        { day:"thu", start:"20:30", end:"22:00", level:"IM/AD/TN",coach:"Hotta", court:"C1", cat:"pink"   },
+
+        // Fri 5/15
+        { day:"fri", start:"09:00", end:"10:30", level:"BG/IM",   coach:"Sakai", court:"C1", cat:"pink"   },
+        { day:"fri", start:"10:30", end:"12:00", level:"FL/BG",   coach:"Otsu",  court:"C1", cat:"pink"   },
+        { day:"fri", start:"10:30", end:"12:00", level:"ST",      coach:"Hotta", court:"C2", cat:"pink"   },
+        { day:"fri", start:"16:00", end:"17:00", level:"Kids",    coach:"Hotta", court:"C1", cat:"green"  },
+        { day:"fri", start:"17:00", end:"18:30", level:"JF",      coach:"Otsu",  court:"C1", cat:"blue"   },
+        { day:"fri", start:"17:00", end:"18:30", level:"PP",      coach:"Sakai", court:"C2", cat:"blue"   },
+        { day:"fri", start:"18:30", end:"20:30", level:"PL",      coach:"Otsu/Hotta", court:"C1/C2", cat:"purple" },
+
+        // Sat 5/16
+        { day:"sat", start:"09:00", end:"10:30", level:"AD/TN",   coach:"Sakai", court:"C1", cat:"pink"   },
+        { day:"sat", start:"09:00", end:"10:30", level:"JA",      coach:"Otsu",  court:"C2", cat:"blue"   },
+        { day:"sat", start:"10:30", end:"12:00", level:"IM/AD",   coach:"Hotta", court:"C1", cat:"pink"   },
+        { day:"sat", start:"10:30", end:"12:00", level:"FL/BG",   coach:"Sakai", court:"C2", cat:"pink"   },
+        { day:"sat", start:"13:30", end:"15:00", level:"BG/IM",   coach:"Sakai", court:"C1", cat:"pink"   },
+        { day:"sat", start:"13:30", end:"15:00", level:"JF",      coach:"Hotta", court:"C2", cat:"blue"   },
+        { day:"sat", start:"15:00", end:"16:30", level:"PP",      coach:"Hotta", court:"C1", cat:"blue"   },
+        { day:"sat", start:"15:00", end:"16:30", level:"JF",      coach:"Otsu",  court:"C2", cat:"blue"   },
+        { day:"sat", start:"16:30", end:"18:30", level:"PL",      coach:"Otsu",  court:"C1", cat:"purple" },
+        { day:"sat", start:"16:30", end:"18:00", level:"PP",      coach:"Sakai", court:"C2", cat:"orange", note:"Jr.High Performance" },
+
+        // Sun 5/17
+        { day:"sun", start:"09:00", end:"10:30", level:"JA",      coach:"Sakai", court:"C1", cat:"blue"   },
+        { day:"sun", start:"09:00", end:"10:30", level:"JF",      coach:"Hotta", court:"C2", cat:"blue"   },
+        { day:"sun", start:"10:30", end:"12:00", level:"IM/AD",   coach:"Sakai", court:"C1", cat:"pink"   },
+        { day:"sun", start:"10:30", end:"12:00", level:"PP",      coach:"Otsu",  court:"C2", cat:"blue"   },
+        { day:"sun", start:"12:00", end:"13:30", level:"FL/BG",   coach:"Hotta", court:"C1", cat:"pink", star:true },
+        { day:"sun", start:"13:30", end:"15:00", level:"ST",      coach:"Hotta", court:"C1", cat:"pink"   },
+        { day:"sun", start:"13:30", end:"15:00", level:"AD/TN",   coach:"Otsu",  court:"C2", cat:"pink"   },
+        { day:"sun", start:"15:00", end:"16:30", level:"JA/PP",   coach:"Otsu",  court:"C1", cat:"orange", note:"Jr.High Performance" },
+        { day:"sun", start:"15:00", end:"16:30", level:"BG/IM",   coach:"Sakai", court:"C2", cat:"pink"   },
+        { day:"sun", start:"16:30", end:"18:30", level:"PL",      coach:"Otsu/Palm", court:"C1/C2", cat:"purple" },
+      ],
+    },
   ];
 
-  // Categories from the legend
-  const categories = {
-    pink:   { name:"Adult" },
-    green:  { name:"Kids 5–7yrs" },
-    blue:   { name:"Junior" },
-    purple: { name:"Jr. Players" },
-    orange: { name:"Events" },
-  };
-
-  // Sessions list
-  const sessions = [
-    // Mon 5/11
-    { day:"mon", start:"09:00", end:"10:30", level:"IM/AD",   coach:"Sakai", court:"C1", cat:"pink"   },
-    { day:"mon", start:"09:00", end:"10:30", level:"BG/IM",   coach:"Hotta", court:"C2", cat:"pink", star:true },
-    { day:"mon", start:"10:30", end:"12:00", level:"FL/BG",   coach:"Hotta", court:"C1", cat:"pink"   },
-    { day:"mon", start:"16:00", end:"17:00", level:"Kids",    coach:"Otsu",  court:"C1", cat:"green"  },
-    { day:"mon", start:"17:00", end:"18:30", level:"JA",      coach:"Hotta", court:"C1", cat:"blue"   },
-    { day:"mon", start:"17:00", end:"18:30", level:"PP",      coach:"Sakai", court:"C2", cat:"blue"   },
-    { day:"mon", start:"18:30", end:"20:30", level:"PL",      coach:"Otsu",  court:"C1/C2", cat:"purple" },
-
-    // Tue 5/12
-    { day:"tue", start:"09:00", end:"10:30", level:"FL/BG",   coach:"Sakai", court:"C1", cat:"pink"   },
-    { day:"tue", start:"10:30", end:"12:00", level:"IM/AD",   coach:"Sakai", court:"C1", cat:"pink"   },
-    { day:"tue", start:"10:30", end:"12:00", level:"ST",      coach:"Hotta", court:"C2", cat:"pink"   },
-    { day:"tue", start:"17:00", end:"18:30", level:"JA",      coach:"Hotta", court:"C1", cat:"blue"   },
-    { day:"tue", start:"17:00", end:"18:30", level:"PP",      coach:"Otsu",  court:"C2", cat:"blue"   },
-    { day:"tue", start:"18:30", end:"20:30", level:"PL",      coach:"Otsu",  court:"C1/C2", cat:"purple" },
-
-    // Thu 5/14
-    { day:"thu", start:"09:00", end:"10:30", level:"FL/BG",   coach:"Sakai", court:"C1", cat:"pink"   },
-    { day:"thu", start:"10:30", end:"12:00", level:"BG/IM",   coach:"Otsu",  court:"C1", cat:"pink"   },
-    { day:"thu", start:"16:00", end:"17:00", level:"Kids",    coach:"Hotta", court:"C1", cat:"green"  },
-    { day:"thu", start:"17:00", end:"18:30", level:"JA",      coach:"Otsu",  court:"C1", cat:"blue"   },
-    { day:"thu", start:"17:00", end:"18:30", level:"JF",      coach:"Sakai", court:"C2", cat:"blue"   },
-    { day:"thu", start:"18:30", end:"20:30", level:"PL",      coach:"Otsu",  court:"C1/C2", cat:"purple" },
-    { day:"thu", start:"20:30", end:"22:00", level:"IM/AD/TN",coach:"Hotta", court:"C1", cat:"pink"   },
-
-    // Fri 5/15
-    { day:"fri", start:"09:00", end:"10:30", level:"BG/IM",   coach:"Sakai", court:"C1", cat:"pink"   },
-    { day:"fri", start:"10:30", end:"12:00", level:"FL/BG",   coach:"Otsu",  court:"C1", cat:"pink"   },
-    { day:"fri", start:"10:30", end:"12:00", level:"ST",      coach:"Hotta", court:"C2", cat:"pink"   },
-    { day:"fri", start:"16:00", end:"17:00", level:"Kids",    coach:"Hotta", court:"C1", cat:"green"  },
-    { day:"fri", start:"17:00", end:"18:30", level:"JF",      coach:"Otsu",  court:"C1", cat:"blue"   },
-    { day:"fri", start:"17:00", end:"18:30", level:"PP",      coach:"Sakai", court:"C2", cat:"blue"   },
-    { day:"fri", start:"18:30", end:"20:30", level:"PL",      coach:"Otsu/Hotta", court:"C1/C2", cat:"purple" },
-
-    // Sat 5/16
-    { day:"sat", start:"09:00", end:"10:30", level:"AD/TN",   coach:"Sakai", court:"C1", cat:"pink"   },
-    { day:"sat", start:"09:00", end:"10:30", level:"JA",      coach:"Otsu",  court:"C2", cat:"blue"   },
-    { day:"sat", start:"10:30", end:"12:00", level:"IM/AD",   coach:"Hotta", court:"C1", cat:"pink"   },
-    { day:"sat", start:"10:30", end:"12:00", level:"FL/BG",   coach:"Sakai", court:"C2", cat:"pink"   },
-    { day:"sat", start:"13:30", end:"15:00", level:"BG/IM",   coach:"Sakai", court:"C1", cat:"pink"   },
-    { day:"sat", start:"13:30", end:"15:00", level:"JF",      coach:"Hotta", court:"C2", cat:"blue"   },
-    { day:"sat", start:"15:00", end:"16:30", level:"PP",      coach:"Hotta", court:"C1", cat:"blue"   },
-    { day:"sat", start:"15:00", end:"16:30", level:"JF",      coach:"Otsu",  court:"C2", cat:"blue"   },
-    { day:"sat", start:"16:30", end:"18:30", level:"PL",      coach:"Otsu",  court:"C1", cat:"purple" },
-    { day:"sat", start:"16:30", end:"18:00", level:"PP",      coach:"Sakai", court:"C2", cat:"orange", note:"Jr.High Performance" },
-
-    // Sun 5/17
-    { day:"sun", start:"09:00", end:"10:30", level:"JA",      coach:"Sakai", court:"C1", cat:"blue"   },
-    { day:"sun", start:"09:00", end:"10:30", level:"JF",      coach:"Hotta", court:"C2", cat:"blue"   },
-    { day:"sun", start:"10:30", end:"12:00", level:"IM/AD",   coach:"Sakai", court:"C1", cat:"pink"   },
-    { day:"sun", start:"10:30", end:"12:00", level:"PP",      coach:"Otsu",  court:"C2", cat:"blue"   },
-    { day:"sun", start:"12:00", end:"13:30", level:"FL/BG",   coach:"Hotta", court:"C1", cat:"pink", star:true },
-    { day:"sun", start:"13:30", end:"15:00", level:"ST",      coach:"Hotta", court:"C1", cat:"pink"   },
-    { day:"sun", start:"13:30", end:"15:00", level:"AD/TN",   coach:"Otsu",  court:"C2", cat:"pink"   },
-    { day:"sun", start:"15:00", end:"16:30", level:"JA/PP",   coach:"Otsu",  court:"C1", cat:"orange", note:"Jr.High Performance" },
-    { day:"sun", start:"15:00", end:"16:30", level:"BG/IM",   coach:"Sakai", court:"C2", cat:"pink"   },
-    { day:"sun", start:"16:30", end:"18:30", level:"PL",      coach:"Otsu/Palm", court:"C1/C2", cat:"purple" },
-  ];
+  // Default to the upcoming week (or the latest, as a fallback)
+  const today = new Date();
+  function weekStart(id) {
+    // id is YYYYMMDD
+    return new Date(`${id.slice(0,4)}-${id.slice(4,6)}-${id.slice(6,8)}T00:00:00`);
+  }
+  let currentWeek = weeks.find(w => weekStart(w.id) >= today) || weeks[weeks.length - 1];
+  let days = currentWeek.days;
+  let sessions = currentWeek.sessions;
 
   // -------- Render --------
   const calendarEl = document.getElementById("calendar");
+  const dayTabsInner = document.getElementById("dayTabsInner");
+  const subTextEl = document.getElementById("subText");
+  const metaWedNoteEl = document.getElementById("metaWedNote");
   const HOUR_HEIGHT = 90; // px per hour
   const START_HOUR = 9;
   const END_HOUR = 22;
@@ -447,114 +534,6 @@
   function topPx(t){ return ((timeToMin(t) - START_HOUR*60) / 60) * HOUR_HEIGHT; }
   function heightPx(s,e){ return ((timeToMin(e)-timeToMin(s))/60) * HOUR_HEIGHT; }
 
-  // Time column header (blank corner)
-  const corner = document.createElement("div");
-  corner.className = "col-header";
-  corner.style.background = "#fff";
-  calendarEl.appendChild(corner);
-
-  // Day headers
-  days.forEach(d => {
-    const h = document.createElement("div");
-    h.className = "col-header day" + (d.weekend ? " " + d.weekend : "");
-    h.innerHTML = `<div class="dow">${d.label}</div><div class="date">${d.date}</div>`;
-    calendarEl.appendChild(h);
-  });
-
-  // Time column body
-  const timeCol = document.createElement("div");
-  timeCol.className = "time-col";
-  timeCol.style.gridColumn = "1 / 2";
-  timeCol.style.gridRow = "2 / 3";
-  for (let h = START_HOUR; h < END_HOUR; h++) {
-    const cell = document.createElement("div");
-    cell.className = "time-cell";
-    cell.textContent = `${String(h).padStart(2,"0")}:00`;
-    timeCol.appendChild(cell);
-  }
-  calendarEl.appendChild(timeCol);
-
-  // Day columns
-  days.forEach((d, idx) => {
-    const col = document.createElement("div");
-    col.className = "day-col" + (d.weekend ? " " + d.weekend : "");
-    col.style.height = (TOTAL_HOURS * HOUR_HEIGHT) + "px";
-    col.style.gridColumn = (idx + 2) + " / " + (idx + 3);
-    col.style.gridRow = "2 / 3";
-    col.dataset.day = d.key;
-
-    // sessions for this day, sorted by start
-    const daySessions = sessions
-      .filter(s => s.day === d.key)
-      .sort((a,b) => timeToMin(a.start) - timeToMin(b.start));
-
-    // simple side-by-side handling: when two sessions overlap, show side by side
-    const groups = [];
-    daySessions.forEach(s => {
-      let placed = false;
-      for (const g of groups) {
-        if (g.some(x => !(timeToMin(x.end) <= timeToMin(s.start) || timeToMin(x.start) >= timeToMin(s.end)))) {
-          // overlaps with someone in g, but we still add to find a free column
-        }
-      }
-      // assign column index by checking overlap with already-placed sessions
-      const colsTaken = [];
-      daySessions.forEach(other => {
-        if (other === s || !other._placed) return;
-        const overlap = !(timeToMin(other.end) <= timeToMin(s.start) || timeToMin(other.start) >= timeToMin(s.end));
-        if (overlap) colsTaken.push(other._col);
-      });
-      let c = 0;
-      while (colsTaken.includes(c)) c++;
-      s._col = c;
-      s._placed = true;
-    });
-    // determine the max columns that overlap with each session to compute width
-    daySessions.forEach(s => {
-      let maxCols = s._col + 1;
-      daySessions.forEach(o => {
-        if (o === s) return;
-        const overlap = !(timeToMin(o.end) <= timeToMin(s.start) || timeToMin(o.start) >= timeToMin(s.end));
-        if (overlap) maxCols = Math.max(maxCols, o._col + 1);
-      });
-      s._totalCols = maxCols;
-    });
-
-    daySessions.forEach(s => {
-      const el = document.createElement("div");
-      el.className = "session cat-" + s.cat;
-      el.dataset.coach = s.coach;
-      el.dataset.coaches = s.coach.split("/").join("|"); // for multi-coach matching
-      el.dataset.level = s.level;
-      el.dataset.levelTokens = s.level.split("/").join("|"); // tokens for matching
-      el.style.top = topPx(s.start) + "px";
-      el.style.height = (heightPx(s.start, s.end) - 2) + "px";
-      const widthPct = 100 / s._totalCols;
-      el.style.left = `calc(${widthPct * s._col}% + 2px)`;
-      el.style.width = `calc(${widthPct}% - 4px)`;
-      el.title = `${s.start}–${s.end} · ${s.level} · ${s.coach} · ${s.court}${s.note ? " · " + s.note : ""}`;
-      el.innerHTML = `
-        <div class="time">${s.start}–${s.end}</div>
-        <div class="level">${s.star ? '<span class="star">★</span>' : ""}${s.level}</div>
-        <div class="coach">${s.coach}</div>
-        <div class="court">${s.court}${s.note ? " · " + s.note : ""}</div>
-      `;
-      col.appendChild(el);
-    });
-
-    if (daySessions.length === 0) {
-      col.classList.add("empty-day");
-      const note = document.createElement("div");
-      note.className = "empty-note";
-      note.textContent = "No sessions";
-      col.appendChild(note);
-    }
-
-    calendarEl.appendChild(col);
-  });
-
-  // -------- Mobile day-picker tabs --------
-  const dayTabsInner = document.getElementById("dayTabsInner");
   function setActiveDay(key) {
     document.querySelectorAll(".day-col").forEach(el => {
       el.classList.toggle("active", el.dataset.day === key);
@@ -563,22 +542,152 @@
       el.classList.toggle("active", el.dataset.day === key);
     });
   }
-  days.forEach((d, idx) => {
-    const tab = document.createElement("button");
-    tab.type = "button";
-    tab.className = "day-tab" + (d.weekend ? " " + d.weekend : "");
-    tab.dataset.day = d.key;
-    tab.innerHTML = `<span class="dow">${d.label}</span><span class="date">${d.date}</span>`;
-    tab.addEventListener("click", () => setActiveDay(d.key));
-    dayTabsInner.appendChild(tab);
-  });
-  // Default to Monday active
-  setActiveDay("mon");
+
+  function renderCalendar() {
+    days = currentWeek.days;
+    sessions = currentWeek.sessions;
+
+    // Update header text
+    subTextEl.innerHTML = `Week of <b>${currentWeek.sub.replace(/^Week of /,'')}</b> · Filter by coach and level. Hover a session for details.`;
+    metaWedNoteEl.textContent = currentWeek.noWedNote || "";
+
+    // Clear existing render
+    calendarEl.innerHTML = "";
+    dayTabsInner.innerHTML = "";
+
+    // Time column header (blank corner)
+    const corner = document.createElement("div");
+    corner.className = "col-header";
+    corner.style.background = "#fff";
+    calendarEl.appendChild(corner);
+
+    // Day headers
+    days.forEach(d => {
+      const h = document.createElement("div");
+      h.className = "col-header day" + (d.weekend ? " " + d.weekend : "");
+      h.innerHTML = `<div class="dow">${d.label}</div><div class="date">${d.date}</div>`;
+      calendarEl.appendChild(h);
+    });
+
+    // Time column body
+    const timeCol = document.createElement("div");
+    timeCol.className = "time-col";
+    timeCol.style.gridColumn = "1 / 2";
+    timeCol.style.gridRow = "2 / 3";
+    for (let h = START_HOUR; h < END_HOUR; h++) {
+      const cell = document.createElement("div");
+      cell.className = "time-cell";
+      cell.textContent = `${String(h).padStart(2,"0")}:00`;
+      timeCol.appendChild(cell);
+    }
+    calendarEl.appendChild(timeCol);
+
+    // Day columns
+    days.forEach((d, idx) => {
+      const col = document.createElement("div");
+      col.className = "day-col" + (d.weekend ? " " + d.weekend : "");
+      col.style.height = (TOTAL_HOURS * HOUR_HEIGHT) + "px";
+      col.style.gridColumn = (idx + 2) + " / " + (idx + 3);
+      col.style.gridRow = "2 / 3";
+      col.dataset.day = d.key;
+
+      // sessions for this day, sorted by start
+      const daySessions = sessions
+        .filter(s => s.day === d.key)
+        .sort((a,b) => timeToMin(a.start) - timeToMin(b.start));
+
+      // assign column index by checking overlap with already-placed sessions
+      daySessions.forEach(s => {
+        const colsTaken = [];
+        daySessions.forEach(other => {
+          if (other === s || !other._placed) return;
+          const overlap = !(timeToMin(other.end) <= timeToMin(s.start) || timeToMin(other.start) >= timeToMin(s.end));
+          if (overlap) colsTaken.push(other._col);
+        });
+        let c = 0;
+        while (colsTaken.includes(c)) c++;
+        s._col = c;
+        s._placed = true;
+      });
+      // determine the max columns that overlap with each session to compute width
+      daySessions.forEach(s => {
+        let maxCols = s._col + 1;
+        daySessions.forEach(o => {
+          if (o === s) return;
+          const overlap = !(timeToMin(o.end) <= timeToMin(s.start) || timeToMin(o.start) >= timeToMin(s.end));
+          if (overlap) maxCols = Math.max(maxCols, o._col + 1);
+        });
+        s._totalCols = maxCols;
+      });
+
+      daySessions.forEach(s => {
+        const el = document.createElement("div");
+        el.className = "session cat-" + s.cat;
+        el.dataset.coach = s.coach;
+        el.dataset.coaches = s.coach.split("/").join("|");
+        el.dataset.level = s.level;
+        el.dataset.levelTokens = s.level.split("/").join("|");
+        el.style.top = topPx(s.start) + "px";
+        el.style.height = (heightPx(s.start, s.end) - 2) + "px";
+        const widthPct = 100 / s._totalCols;
+        el.style.left = `calc(${widthPct * s._col}% + 2px)`;
+        el.style.width = `calc(${widthPct}% - 4px)`;
+        el.title = `${s.start}–${s.end} · ${s.level} · ${s.coach} · ${s.court}${s.note ? " · " + s.note : ""}`;
+        el.innerHTML = `
+          <div class="time">${s.start}–${s.end}</div>
+          <div class="level">${s.star ? '<span class="star">★</span>' : ""}${s.level}</div>
+          <div class="coach">${s.coach}</div>
+          <div class="court">${s.court}${s.note ? " · " + s.note : ""}</div>
+        `;
+        col.appendChild(el);
+      });
+
+      if (daySessions.length === 0) {
+        col.classList.add("empty-day");
+        const note = document.createElement("div");
+        note.className = "empty-note";
+        note.textContent = "No sessions";
+        col.appendChild(note);
+      }
+
+      calendarEl.appendChild(col);
+    });
+
+    // Build mobile day-picker tabs for this week
+    days.forEach(d => {
+      const tab = document.createElement("button");
+      tab.type = "button";
+      tab.className = "day-tab" + (d.weekend ? " " + d.weekend : "");
+      tab.dataset.day = d.key;
+      tab.innerHTML = `<span class="dow">${d.label}</span><span class="date">${d.date}</span>`;
+      tab.addEventListener("click", () => setActiveDay(d.key));
+      dayTabsInner.appendChild(tab);
+    });
+    setActiveDay("mon");
+  }
+
+  renderCalendar();
 
   // -------- Filter UI --------
-  // Build coach options (split combos like Otsu/Hotta, Otsu/Palm)
+  // Week selector (populated from `weeks`)
+  const weekSelect = document.getElementById("weekFilter");
+  weeks.forEach(w => {
+    const o = document.createElement("option");
+    o.value = w.id; o.textContent = w.label;
+    weekSelect.appendChild(o);
+  });
+  weekSelect.value = currentWeek.id;
+  weekSelect.addEventListener("change", () => {
+    const w = weeks.find(x => x.id === weekSelect.value);
+    if (!w) return;
+    currentWeek = w;
+    renderCalendar();
+    applyFilters();
+  });
+
+  // Build coach options across ALL weeks so filter list is stable when switching
   const coachSet = new Set();
-  sessions.forEach(s => s.coach.split("/").forEach(c => coachSet.add(c.trim())));
+  weeks.forEach(w => w.sessions.forEach(s => s.coach.split("/").forEach(c => coachSet.add(c.trim()))));
   const coachList = [...coachSet].sort();
   const coachSelect = document.getElementById("coachFilter");
   coachList.forEach(c => {
