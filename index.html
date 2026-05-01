@@ -105,6 +105,82 @@
     overflow-x: auto;
     min-width: 900px;
   }
+  /* Agenda (mobile) view — hidden by default, shown via @media */
+  .agenda { display: none; }
+  .agenda-day { background: #fff; }
+  .agenda-day-header {
+    position: sticky;
+    top: 0;
+    padding: 9px 14px;
+    background: #f1f3f7;
+    border-top: 1px solid var(--grid);
+    border-bottom: 1px solid var(--grid);
+    font-weight: 700;
+    font-size: 13px;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--text);
+  }
+  .agenda-day.sat .agenda-day-header { background: var(--weekend-sat); }
+  .agenda-day.sun .agenda-day-header { background: var(--weekend-sun); }
+  .agenda-day-header .count {
+    color: var(--muted);
+    font-weight: 500;
+    font-size: 11px;
+    background: rgba(255,255,255,.6);
+    padding: 1px 8px;
+    border-radius: 999px;
+  }
+  .agenda-session {
+    display: grid;
+    grid-template-columns: 88px 1fr auto;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 1px solid #eef0f4;
+    align-items: center;
+    background: #fff;
+  }
+  .agenda-session.faded { opacity: 0.18; filter: grayscale(0.7); }
+  .agenda-session .a-time {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  .agenda-session .a-info { min-width: 0; }
+  .agenda-session .a-info .level {
+    display: inline-block;
+    font-weight: 700;
+    font-size: 12px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    color: #fff;
+    letter-spacing: .2px;
+    margin-bottom: 3px;
+  }
+  .agenda-session.cat-pink   .level { background: var(--pink); }
+  .agenda-session.cat-green  .level { background: var(--green); }
+  .agenda-session.cat-blue   .level { background: var(--blue); }
+  .agenda-session.cat-purple .level { background: var(--purple); }
+  .agenda-session.cat-orange .level { background: var(--orange); }
+  .agenda-session .a-info .coach { font-size: 13px; }
+  .agenda-session .a-meta {
+    text-align: right;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.3;
+  }
+  .agenda-session .star { color: #d33; margin-right: 2px; }
+  .agenda-empty {
+    padding: 14px;
+    color: var(--muted);
+    font-style: italic;
+    font-size: 13px;
+    text-align: center;
+    background: #fafbfc;
+  }
   .col-header {
     background: #fff;
     padding: 10px 8px;
@@ -211,7 +287,33 @@
     font-weight: 600;
   }
   @media (max-width: 760px) {
-    .calendar { min-width: 720px; }
+    /* Hide the desktop grid view, show the agenda list */
+    .calendar { display: none; }
+    .agenda { display: block; }
+
+    /* Compact page header */
+    header.page { padding: 14px 16px 8px; }
+    header.page h1 { font-size: 18px; }
+    header.page .sub { font-size: 12px; }
+
+    /* Compact, full-width filters */
+    .filters {
+      padding: 10px 12px;
+      gap: 8px 10px;
+    }
+    .filter-group { font-size: 12px; }
+    .filter-group select, .filter-group button { font-size: 13px; padding: 8px 10px; }
+    .filter-group select { min-width: 120px; max-width: 160px; }
+    .legend {
+      width: 100%;
+      margin-left: 0;
+      gap: 8px 12px;
+      padding-top: 4px;
+      border-top: 1px dashed #ececec;
+      order: 99;
+    }
+    .meta { padding: 12px 16px 24px; }
+    .agenda-day-header { top: 0; }
   }
 </style>
 </head>
@@ -248,6 +350,7 @@
 </div>
 
 <section class="calendar" id="calendar"></section>
+<section class="agenda" id="agenda"></section>
 
 <div class="meta">
   <b>Notes:</b> C1 / C2 = Court 1 / Court 2 (used for layout, not filtering).
@@ -456,6 +559,49 @@
     calendarEl.appendChild(col);
   });
 
+  // -------- Agenda (mobile) --------
+  const agendaEl = document.getElementById("agenda");
+  days.forEach(d => {
+    const sec = document.createElement("div");
+    sec.className = "agenda-day" + (d.weekend ? " " + d.weekend : "");
+
+    const daySessions = sessions
+      .filter(s => s.day === d.key)
+      .sort((a,b) => timeToMin(a.start) - timeToMin(b.start));
+
+    const hdr = document.createElement("div");
+    hdr.className = "agenda-day-header";
+    hdr.innerHTML = `<span>${d.label} · ${d.date}</span><span class="count" data-day="${d.key}">${daySessions.length} sessions</span>`;
+    sec.appendChild(hdr);
+
+    if (daySessions.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "agenda-empty";
+      empty.textContent = "No sessions";
+      sec.appendChild(empty);
+    } else {
+      daySessions.forEach(s => {
+        const item = document.createElement("div");
+        item.className = "agenda-session session cat-" + s.cat;
+        item.dataset.coach = s.coach;
+        item.dataset.coaches = s.coach.split("/").join("|");
+        item.dataset.level = s.level;
+        item.dataset.day = d.key;
+        item.innerHTML = `
+          <div class="a-time">${s.start}<br>${s.end}</div>
+          <div class="a-info">
+            <div class="level">${s.star ? '<span class="star">★</span>' : ""}${s.level}</div>
+            <div class="coach">${s.coach}</div>
+          </div>
+          <div class="a-meta">${s.court}${s.note ? '<br>' + s.note : ''}</div>
+        `;
+        sec.appendChild(item);
+      });
+    }
+
+    agendaEl.appendChild(sec);
+  });
+
   // -------- Filter UI --------
   // Build coach options (split combos like Otsu/Hotta, Otsu/Palm)
   const coachSet = new Set();
@@ -496,21 +642,39 @@
   function applyFilters() {
     const coach = coachSelect.value;
     const level = levelSelect.value;
+    const perDay = {}; // day -> visible count
     let visible = 0, total = 0;
     document.querySelectorAll(".session").forEach(el => {
-      total++;
       const coaches = (el.dataset.coaches || "").split("|");
       const elLevel = el.dataset.level || "";
       const coachOk = (coach === "all") || coaches.includes(coach);
       const levelOk = (level === "all") || elLevel === level;
       if (coachOk && levelOk) {
         el.classList.remove("faded");
-        visible++;
       } else {
         el.classList.add("faded");
       }
+      // Count distinct sessions via the calendar grid (always rendered)
+      if (el.parentElement && el.parentElement.classList.contains("day-col")) {
+        total++;
+        if (coachOk && levelOk) visible++;
+      }
+      // Track per-day for agenda counts (use agenda items so we don't double)
+      if (el.classList.contains("agenda-session")) {
+        const d = el.dataset.day;
+        if (!perDay[d]) perDay[d] = 0;
+        if (coachOk && levelOk) perDay[d]++;
+      }
     });
     countEl.textContent = `${visible} of ${total} sessions`;
+    // Update agenda per-day counts
+    document.querySelectorAll(".agenda-day-header .count").forEach(c => {
+      const d = c.dataset.day;
+      const n = perDay[d] || 0;
+      c.textContent = (level === "all" && coach === "all")
+        ? `${n} sessions`
+        : `${n} matching`;
+    });
   }
 
   coachSelect.addEventListener("change", applyFilters);
