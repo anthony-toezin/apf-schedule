@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>APF Group Lesson Schedule — May 11–17, 2026</title>
+<style>
+  :root {
+    --pink: #e91e63;
+    --pink-bg: #fce4ec;
+    --green: #43a047;
+    --green-bg: #e8f5e9;
+    --blue: #1e88e5;
+    --blue-bg: #e3f2fd;
+    --purple: #8e24aa;
+    --purple-bg: #f3e5f5;
+    --orange: #fb8c00;
+    --orange-bg: #fff3e0;
+    --grid: #d8dde4;
+    --bg: #f7f8fa;
+    --text: #1d2330;
+    --muted: #7a8295;
+    --header: #2b3242;
+    --weekend-sat: #e8eefc;
+    --weekend-sun: #fde8e6;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+  }
+  header.page {
+    padding: 20px 28px 12px;
+    background: #fff;
+    border-bottom: 1px solid var(--grid);
+  }
+  header.page h1 {
+    margin: 0 0 4px 0;
+    font-size: 22px;
+    letter-spacing: .2px;
+  }
+  header.page .sub {
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .filters {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: #fff;
+    padding: 12px 28px;
+    border-bottom: 1px solid var(--grid);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 22px;
+    align-items: center;
+  }
+  .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+  }
+  .filter-group label {
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    font-size: 11px;
+  }
+  .filter-group select, .filter-group button {
+    font: inherit;
+    font-size: 13px;
+    padding: 6px 10px;
+    border: 1px solid var(--grid);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--text);
+    cursor: pointer;
+  }
+  .filter-group select:focus, .filter-group button:focus { outline: 2px solid #88abff; }
+  .filter-group button.reset {
+    background: #f1f3f7;
+    border-color: #d8dde4;
+  }
+  .legend {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .legend-item { display:flex; align-items:center; gap:6px; }
+  .swatch { width: 12px; height:12px; border-radius:3px; display:inline-block; }
+  .calendar {
+    display: grid;
+    grid-template-columns: 70px repeat(6, 1fr);
+    border-top: 1px solid var(--grid);
+    background: #fff;
+    margin: 0;
+    overflow-x: auto;
+    min-width: 900px;
+  }
+  .col-header {
+    background: #fff;
+    padding: 10px 8px;
+    border-right: 1px solid var(--grid);
+    border-bottom: 1px solid var(--grid);
+    text-align: center;
+    font-weight: 600;
+  }
+  .col-header.day .dow { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing:1px; }
+  .col-header.day .date { font-size: 18px; }
+  .col-header.day.sat { background: var(--weekend-sat); }
+  .col-header.day.sun { background: var(--weekend-sun); }
+  .time-col {
+    border-right: 1px solid var(--grid);
+    background: #fff;
+  }
+  .time-cell {
+    height: 60px;
+    padding: 4px 8px 0 6px;
+    color: var(--muted);
+    font-size: 11px;
+    text-align: right;
+    border-bottom: 1px dashed #ececec;
+    background: #fff;
+  }
+  .day-col {
+    position: relative;
+    border-right: 1px solid var(--grid);
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 59px,
+      #ececec 59px,
+      #ececec 60px
+    );
+  }
+  .day-col.sat { background-color: rgba(232, 238, 252, 0.35); background-blend-mode: multiply; }
+  .day-col.sun { background-color: rgba(253, 232, 230, 0.35); background-blend-mode: multiply; }
+  .session {
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-size: 12px;
+    line-height: 1.25;
+    border: 1px solid;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0,0,0,.04);
+    transition: opacity .15s ease, filter .15s ease, transform .1s ease;
+    overflow: hidden;
+  }
+  .session:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,.10); z-index: 2; }
+  .session.cat-pink   { border-color: var(--pink); background: var(--pink-bg); }
+  .session.cat-green  { border-color: var(--green); background: var(--green-bg); }
+  .session.cat-blue   { border-color: var(--blue); background: var(--blue-bg); }
+  .session.cat-purple { border-color: var(--purple); background: var(--purple-bg); }
+  .session.cat-orange { border-color: var(--orange); background: var(--orange-bg); }
+  .session .time { font-weight: 600; font-size: 11px; color: var(--muted); }
+  .session .level {
+    display: inline-block;
+    font-weight: 700;
+    margin-top: 3px;
+    margin-bottom: 1px;
+    font-size: 12px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    color: #fff;
+    letter-spacing: .2px;
+  }
+  .session.cat-pink   .level { background: var(--pink); }
+  .session.cat-green  .level { background: var(--green); }
+  .session.cat-blue   .level { background: var(--blue); }
+  .session.cat-purple .level { background: var(--purple); }
+  .session.cat-orange .level { background: var(--orange); }
+  .session .level .star { color: #fff; }
+  .session .coach { margin-top: 1px; }
+  .session .court { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .session .star { color: #d33; font-weight: 700; margin-right: 3px; }
+  .session.faded { opacity: 0.10; filter: grayscale(0.8); }
+  .empty-day .empty-note {
+    position: absolute;
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
+    color: var(--muted);
+    font-size: 13px;
+    font-style: italic;
+  }
+  .meta {
+    padding: 14px 28px 28px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.55;
+    background: #fff;
+    border-top: 1px solid var(--grid);
+  }
+  .meta b { color: var(--text); }
+  .count-pill {
+    margin-left: 6px;
+    background: #eef2ff;
+    color: #3958c8;
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  @media (max-width: 760px) {
+    .calendar { min-width: 720px; }
+  }
+</style>
+</head>
+<body>
+<header class="page">
+  <h1>APF Group Lesson Schedule</h1>
+  <div class="sub">Week of <b>May 11 – May 17, 2026</b> · Filter by coach and level. Hover a session for details.</div>
+</header>
+
+<div class="filters">
+  <div class="filter-group">
+    <label for="coachFilter">Coach</label>
+    <select id="coachFilter">
+      <option value="all">All coaches</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label for="levelFilter">Level</label>
+    <select id="levelFilter">
+      <option value="all">All levels</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <button class="reset" id="resetBtn">Reset</button>
+    <span id="resultsCount" class="count-pill">— sessions</span>
+  </div>
+  <div class="legend">
+    <span class="legend-item"><span class="swatch" style="background:var(--pink)"></span>Adult</span>
+    <span class="legend-item"><span class="swatch" style="background:var(--green)"></span>Kids 5–7</span>
+    <span class="legend-item"><span class="swatch" style="background:var(--blue)"></span>Junior</span>
+    <span class="legend-item"><span class="swatch" style="background:var(--purple)"></span>Jr. Players</span>
+    <span class="legend-item"><span class="swatch" style="background:var(--orange)"></span>Events</span>
+  </div>
+</div>
+
+<section class="calendar" id="calendar"></section>
+
+<div class="meta">
+  <b>Notes:</b> C1 / C2 = Court 1 / Court 2 (used for layout, not filtering).
+  Sessions with a red ★ may not run if the assigned coach changes or two coaches are on court.
+  Schedule does not include Wednesday 5/13.
+  Capacity per court: Adult 8, Kids 5–7 6, Junior 10, Jr. Players 6. Events vary.
+</div>
+
+<script>
+  // -------- Data --------
+  // Each session: day (1=Mon), start, end (24h), level (cleaned, no court), coach, court, category, star?
+  const days = [
+    { key:"mon", label:"Mon", date:"5/11", weekend:false },
+    { key:"tue", label:"Tue", date:"5/12", weekend:false },
+    { key:"thu", label:"Thu", date:"5/14", weekend:false },
+    { key:"fri", label:"Fri", date:"5/15", weekend:false },
+    { key:"sat", label:"Sat", date:"5/16", weekend:"sat" },
+    { key:"sun", label:"Sun", date:"5/17", weekend:"sun" },
+  ];
+
+  // Categories from the legend
+  const categories = {
+    pink:   { name:"Adult" },
+    green:  { name:"Kids 5–7yrs" },
+    blue:   { name:"Junior" },
+    purple: { name:"Jr. Players" },
+    orange: { name:"Events" },
+  };
+
+  // Sessions list
+  const sessions = [
+    // Mon 5/11
+    { day:"mon", start:"09:00", end:"10:30", level:"IM/AD",   coach:"Sakai", court:"C1", cat:"pink"   },
+    { day:"mon", start:"09:00", end:"10:30", level:"BG/IM",   coach:"Hotta", court:"C2", cat:"pink", star:true },
+    { day:"mon", start:"10:30", end:"12:00", level:"FL/BG",   coach:"Hotta", court:"C1", cat:"pink"   },
+    { day:"mon", start:"16:00", end:"17:00", level:"Kids",    coach:"Otsu",  court:"C1", cat:"green"  },
+    { day:"mon", start:"17:00", end:"18:30", level:"JA",      coach:"Hotta", court:"C1", cat:"blue"   },
+    { day:"mon", start:"17:00", end:"18:30", level:"PP",      coach:"Sakai", court:"C2", cat:"blue"   },
+    { day:"mon", start:"18:30", end:"20:30", level:"PL",      coach:"Otsu",  court:"C1/C2", cat:"purple" },
+
+    // Tue 5/12
+    { day:"tue", start:"09:00", end:"10:30", level:"FL/BG",   coach:"Sakai", court:"C1", cat:"pink"   },
+    { day:"tue", start:"10:30", end:"12:00", level:"IM/AD",   coach:"Sakai", court:"C1", cat:"pink"   },
+    { day:"tue", start:"10:30", end:"12:00", level:"ST",      coach:"Hotta", court:"C2", cat:"pink"   },
+    { day:"tue", start:"17:00", end:"18:30", level:"JA",      coach:"Hotta", court:"C1", cat:"blue"   },
+    { day:"tue", start:"17:00", end:"18:30", level:"PP",      coach:"Otsu",  court:"C2", cat:"blue"   },
+    { day:"tue", start:"18:30", end:"20:30", level:"PL",      coach:"Otsu",  court:"C1/C2", cat:"purple" },
+
+    // Thu 5/14
+    { day:"thu", start:"09:00", end:"10:30", level:"FL/BG",   coach:"Sakai", court:"C1", cat:"pink"   },
+    { day:"thu", start:"10:30", end:"12:00", level:"BG/IM",   coach:"Otsu",  court:"C1", cat:"pink"   },
+    { day:"thu", start:"16:00", end:"17:00", level:"Kids",    coach:"Hotta", court:"C1", cat:"green"  },
+    { day:"thu", start:"17:00", end:"18:30", level:"JA",      coach:"Otsu",  court:"C1", cat:"blue"   },
+    { day:"thu", start:"17:00", end:"18:30", level:"JF",      coach:"Sakai", court:"C2", cat:"blue"   },
+    { day:"thu", start:"18:30", end:"20:30", level:"PL",      coach:"Otsu",  court:"C1/C2", cat:"purple" },
+    { day:"thu", start:"20:30", end:"22:00", level:"IM/AD/TN",coach:"Hotta", court:"C1", cat:"pink"   },
+
+    // Fri 5/15
+    { day:"fri", start:"09:00", end:"10:30", level:"BG/IM",   coach:"Sakai", court:"C1", cat:"pink"   },
+    { day:"fri", start:"10:30", end:"12:00", level:"FL/BG",   coach:"Otsu",  court:"C1", cat:"pink"   },
+    { day:"fri", start:"10:30", end:"12:00", level:"ST",      coach:"Hotta", court:"C2", cat:"pink"   },
+    { day:"fri", start:"16:00", end:"17:00", level:"Kids",    coach:"Hotta", court:"C1", cat:"green"  },
+    { day:"fri", start:"17:00", end:"18:30", level:"JF",      coach:"Otsu",  court:"C1", cat:"blue"   },
+    { day:"fri", start:"17:00", end:"18:30", level:"PP",      coach:"Sakai", court:"C2", cat:"blue"   },
+    { day:"fri", start:"18:30", end:"20:30", level:"PL",      coach:"Otsu/Hotta", court:"C1/C2", cat:"purple" },
+
+    // Sat 5/16
+    { day:"sat", start:"09:00", end:"10:30", level:"AD/TN",   coach:"Sakai", court:"C1", cat:"pink"   },
+    { day:"sat", start:"09:00", end:"10:30", level:"JA",      coach:"Otsu",  court:"C2", cat:"blue"   },
+    { day:"sat", start:"10:30", end:"12:00", level:"IM/AD",   coach:"Hotta", court:"C1", cat:"pink"   },
+    { day:"sat", start:"10:30", end:"12:00", level:"FL/BG",   coach:"Sakai", court:"C2", cat:"pink"   },
+    { day:"sat", start:"13:30", end:"15:00", level:"BG/IM",   coach:"Sakai", court:"C1", cat:"pink"   },
+    { day:"sat", start:"13:30", end:"15:00", level:"JF",      coach:"Hotta", court:"C2", cat:"blue"   },
+    { day:"sat", start:"15:00", end:"16:30", level:"PP",      coach:"Hotta", court:"C1", cat:"blue"   },
+    { day:"sat", start:"15:00", end:"16:30", level:"JF",      coach:"Otsu",  court:"C2", cat:"blue"   },
+    { day:"sat", start:"16:30", end:"18:30", level:"PL",      coach:"Otsu",  court:"C1", cat:"purple" },
+    { day:"sat", start:"16:30", end:"18:00", level:"PP",      coach:"Sakai", court:"C2", cat:"orange", note:"Jr.High Performance" },
+
+    // Sun 5/17
+    { day:"sun", start:"09:00", end:"10:30", level:"JA",      coach:"Sakai", court:"C1", cat:"blue"   },
+    { day:"sun", start:"09:00", end:"10:30", level:"JF",      coach:"Hotta", court:"C2", cat:"blue"   },
+    { day:"sun", start:"10:30", end:"12:00", level:"IM/AD",   coach:"Sakai", court:"C1", cat:"pink"   },
+    { day:"sun", start:"10:30", end:"12:00", level:"PP",      coach:"Otsu",  court:"C2", cat:"blue"   },
+    { day:"sun", start:"12:00", end:"13:30", level:"FL/BG",   coach:"Hotta", court:"C1", cat:"pink", star:true },
+    { day:"sun", start:"13:30", end:"15:00", level:"ST",      coach:"Hotta", court:"C1", cat:"pink"   },
+    { day:"sun", start:"13:30", end:"15:00", level:"AD/TN",   coach:"Otsu",  court:"C2", cat:"pink"   },
+    { day:"sun", start:"15:00", end:"16:30", level:"JA/PP",   coach:"Otsu",  court:"C1", cat:"orange", note:"Jr.High Performance" },
+    { day:"sun", start:"15:00", end:"16:30", level:"BG/IM",   coach:"Sakai", court:"C2", cat:"pink"   },
+    { day:"sun", start:"16:30", end:"18:30", level:"PL",      coach:"Otsu/Palm", court:"C1/C2", cat:"purple" },
+  ];
+
+  // -------- Render --------
+  const calendarEl = document.getElementById("calendar");
+  const HOUR_HEIGHT = 60; // px per hour
+  const START_HOUR = 9;
+  const END_HOUR = 22;
+  const TOTAL_HOURS = END_HOUR - START_HOUR;
+
+  function timeToMin(t){ const [h,m]=t.split(":").map(Number); return h*60+m; }
+  function topPx(t){ return ((timeToMin(t) - START_HOUR*60) / 60) * HOUR_HEIGHT; }
+  function heightPx(s,e){ return ((timeToMin(e)-timeToMin(s))/60) * HOUR_HEIGHT; }
+
+  // Time column header (blank corner)
+  const corner = document.createElement("div");
+  corner.className = "col-header";
+  corner.style.background = "#fff";
+  calendarEl.appendChild(corner);
+
+  // Day headers
+  days.forEach(d => {
+    const h = document.createElement("div");
+    h.className = "col-header day" + (d.weekend ? " " + d.weekend : "");
+    h.innerHTML = `<div class="dow">${d.label}</div><div class="date">${d.date}</div>`;
+    calendarEl.appendChild(h);
+  });
+
+  // Time column body
+  const timeCol = document.createElement("div");
+  timeCol.className = "time-col";
+  timeCol.style.gridColumn = "1 / 2";
+  timeCol.style.gridRow = "2 / 3";
+  for (let h = START_HOUR; h < END_HOUR; h++) {
+    const cell = document.createElement("div");
+    cell.className = "time-cell";
+    cell.textContent = `${String(h).padStart(2,"0")}:00`;
+    timeCol.appendChild(cell);
+  }
+  calendarEl.appendChild(timeCol);
+
+  // Day columns
+  days.forEach((d, idx) => {
+    const col = document.createElement("div");
+    col.className = "day-col" + (d.weekend ? " " + d.weekend : "");
+    col.style.height = (TOTAL_HOURS * HOUR_HEIGHT) + "px";
+    col.style.gridColumn = (idx + 2) + " / " + (idx + 3);
+    col.style.gridRow = "2 / 3";
+    col.dataset.day = d.key;
+
+    // sessions for this day, sorted by start
+    const daySessions = sessions
+      .filter(s => s.day === d.key)
+      .sort((a,b) => timeToMin(a.start) - timeToMin(b.start));
+
+    // simple side-by-side handling: when two sessions overlap, show side by side
+    const groups = [];
+    daySessions.forEach(s => {
+      let placed = false;
+      for (const g of groups) {
+        if (g.some(x => !(timeToMin(x.end) <= timeToMin(s.start) || timeToMin(x.start) >= timeToMin(s.end)))) {
+          // overlaps with someone in g, but we still add to find a free column
+        }
+      }
+      // assign column index by checking overlap with already-placed sessions
+      const colsTaken = [];
+      daySessions.forEach(other => {
+        if (other === s || !other._placed) return;
+        const overlap = !(timeToMin(other.end) <= timeToMin(s.start) || timeToMin(other.start) >= timeToMin(s.end));
+        if (overlap) colsTaken.push(other._col);
+      });
+      let c = 0;
+      while (colsTaken.includes(c)) c++;
+      s._col = c;
+      s._placed = true;
+    });
+    // determine the max columns that overlap with each session to compute width
+    daySessions.forEach(s => {
+      let maxCols = s._col + 1;
+      daySessions.forEach(o => {
+        if (o === s) return;
+        const overlap = !(timeToMin(o.end) <= timeToMin(s.start) || timeToMin(o.start) >= timeToMin(s.end));
+        if (overlap) maxCols = Math.max(maxCols, o._col + 1);
+      });
+      s._totalCols = maxCols;
+    });
+
+    daySessions.forEach(s => {
+      const el = document.createElement("div");
+      el.className = "session cat-" + s.cat;
+      el.dataset.coach = s.coach;
+      el.dataset.coaches = s.coach.split("/").join("|"); // for multi-coach matching
+      el.dataset.level = s.level;
+      el.dataset.levelTokens = s.level.split("/").join("|"); // tokens for matching
+      el.style.top = topPx(s.start) + "px";
+      el.style.height = (heightPx(s.start, s.end) - 2) + "px";
+      const widthPct = 100 / s._totalCols;
+      el.style.left = `calc(${widthPct * s._col}% + 2px)`;
+      el.style.width = `calc(${widthPct}% - 4px)`;
+      el.title = `${s.start}–${s.end} · ${s.level} · ${s.coach} · ${s.court}${s.note ? " · " + s.note : ""}`;
+      el.innerHTML = `
+        <div class="time">${s.start}–${s.end}</div>
+        <div class="level">${s.star ? '<span class="star">★</span>' : ""}${s.level}</div>
+        <div class="coach">${s.coach}</div>
+        <div class="court">${s.court}${s.note ? " · " + s.note : ""}</div>
+      `;
+      col.appendChild(el);
+    });
+
+    if (daySessions.length === 0) {
+      col.classList.add("empty-day");
+      const note = document.createElement("div");
+      note.className = "empty-note";
+      note.textContent = "No sessions";
+      col.appendChild(note);
+    }
+
+    calendarEl.appendChild(col);
+  });
+
+  // -------- Filter UI --------
+  // Build coach options (split combos like Otsu/Hotta, Otsu/Palm)
+  const coachSet = new Set();
+  sessions.forEach(s => s.coach.split("/").forEach(c => coachSet.add(c.trim())));
+  const coachList = [...coachSet].sort();
+  const coachSelect = document.getElementById("coachFilter");
+  coachList.forEach(c => {
+    const o = document.createElement("option");
+    o.value = c; o.textContent = c;
+    coachSelect.appendChild(o);
+  });
+
+  // Level options — fixed, consolidated list (match level string exactly)
+  const levelList = [
+    "ST",
+    "FL/BG",
+    "BG/IM",
+    "IM/AD",
+    "AD/TN",
+    "JA",
+    "JF",
+    "PP",
+    "PL",
+    "JA/PP",
+    "Kids",
+    "IM/AD/TN",
+  ];
+  const levelSelect = document.getElementById("levelFilter");
+  levelList.forEach(l => {
+    const o = document.createElement("option");
+    o.value = l;
+    o.textContent = l;
+    levelSelect.appendChild(o);
+  });
+
+  const countEl = document.getElementById("resultsCount");
+
+  function applyFilters() {
+    const coach = coachSelect.value;
+    const level = levelSelect.value;
+    let visible = 0, total = 0;
+    document.querySelectorAll(".session").forEach(el => {
+      total++;
+      const coaches = (el.dataset.coaches || "").split("|");
+      const elLevel = el.dataset.level || "";
+      const coachOk = (coach === "all") || coaches.includes(coach);
+      const levelOk = (level === "all") || elLevel === level;
+      if (coachOk && levelOk) {
+        el.classList.remove("faded");
+        visible++;
+      } else {
+        el.classList.add("faded");
+      }
+    });
+    countEl.textContent = `${visible} of ${total} sessions`;
+  }
+
+  coachSelect.addEventListener("change", applyFilters);
+  levelSelect.addEventListener("change", applyFilters);
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    coachSelect.value = "all";
+    levelSelect.value = "all";
+    applyFilters();
+  });
+
+  applyFilters();
+</script>
+</body>
+</html>
